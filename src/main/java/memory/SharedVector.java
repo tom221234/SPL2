@@ -16,17 +16,32 @@ public class SharedVector {
 
     public double get(int index) {
         // TODO: return element at index (read-locked)
-        return vector[index];
+        lock.readLock().lock();
+        try {
+            return vector[index];
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     public int length() {
         // TODO: return vector length
-        return vector.length;
+        lock.readLock().lock();
+        try {
+            return vector.length;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     public VectorOrientation getOrientation() {
         // TODO: return vector orientation
-       return orientation;
+        lock.readLock().lock();
+        try {
+            return orientation;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     public void writeLock() {
@@ -68,15 +83,13 @@ public class SharedVector {
         // TODO: add two vectors
         if (this.length() != other.length()) // checks if the vectors in the same size
             throw new IllegalArgumentException("Illegal operation: dimensions mismatch");
-        try
-        {
+        try {
             this.writeLock();
             other.readLock();
             for (int i = 0; i < this.length(); i++) {
                 this.vector[i] += other.get(i);
             }
-        }
-        finally {
+        } finally {
             other.lock.readLock().unlock();
             this.lock.writeLock().unlock();
         }
@@ -99,16 +112,14 @@ public class SharedVector {
         if (this.length() != other.length()) // checks if the vectors in the same size
             throw new IllegalArgumentException("Illegal operation: dimensions mismatch");
         double result = 0;
-        try
-        {
+        try {
             this.readLock();
             other.readLock();
 
             for (int i = 0; i < this.length(); i++) {
-                result += this.vector[i] * other.get(i);
+                result += this.vector[i] * other.vector[i];
             }
-        }
-        finally {
+        } finally {
             this.readUnlock();
             other.readUnlock();
         }
@@ -117,5 +128,23 @@ public class SharedVector {
 
     public void vecMatMul(SharedMatrix matrix) {
         // TODO: compute row-vector × matrix
+        this.writeLock();
+        try {
+            if (vector.length != matrix.length())
+                throw new IllegalArgumentException("Illegal operation: dimensions mismatch");
+
+            double[] temp = new double[matrix.get(0).length()];
+            for (int i = 0; i < matrix.get(0).length(); i++) {
+                double sum = 0;
+                for (int j = 0; j < matrix.length(); j++) {
+                    sum += this.vector[j] * matrix.get(j).get(i);
+                }
+                temp[i] = sum;
+            }
+            this.vector = temp;
+        } finally {
+            this.writeUnlock();
+        }
+
     }
 }
