@@ -5,8 +5,10 @@ Submission Date: 01/01/2026
 
 Submitters:
 -----------
-1. Name: Itamar "Euler" Cohen 
-
+1. Name: Sir Nitzan Isaac Newton 
+2. Name: Itamar "Euler" Cohen
+3. Name: Tom Georg Ferdinand Ludwig Philipp Cantor
+ 
 Description:
 ------------
 This project implements a multi-threaded Linear Algebra Engine using a custom thread pool (TiredExecutor).
