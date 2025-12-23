@@ -57,6 +57,10 @@ public class TiredThread extends Thread implements Comparable<TiredThread> {
      */
     public void newTask(Runnable task) {
        // TODO
+        if(!this.alive.get() || this.busy.get() || task == null)
+            throw new IllegalStateException("worker is not ready to accept a task");
+        handoff.add(task);
+
     }
 
     /**
@@ -65,16 +69,54 @@ public class TiredThread extends Thread implements Comparable<TiredThread> {
      */
     public void shutdown() {
        // TODO
+        alive.set(false);
+        busy.set(false);
+        handoff.add(POISON_PILL);
     }
 
     @Override
     public void run() {
        // TODO
+        while(this.alive.get()) {
+            try
+            {
+                Runnable task = handoff.take();
+                if (task == POISON_PILL) {
+                    break;
+                }
+                this.busy.set(true);
+
+
+                long idleEnd = System.nanoTime(); // Gets the time from the system for calculation of idle time
+                timeIdle.addAndGet(idleEnd - idleStartTime.get());
+
+
+                long workStart = System.nanoTime(); // Gets the time from the system and task has started running
+
+                task.run();
+
+
+                long workEnd = System.nanoTime(); // Gets the time from the system and task has stopped running
+
+
+                timeUsed.addAndGet(workEnd - workStart); // Calculates time used (workEnd - workStart)
+                busy.set(false);
+
+
+                idleStartTime.set(System.nanoTime());  //start timer of idle
+            }
+            catch (InterruptedException e)
+            {
+                break;
+            }
+
+
+        }
     }
 
     @Override
     public int compareTo(TiredThread o) {
         // TODO
-        return 0;
+        return Double.compare(this.getFatigue(), o.getFatigue()); // return who has more fatigue
     }
 }

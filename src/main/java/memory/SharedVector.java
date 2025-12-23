@@ -86,12 +86,12 @@ public class SharedVector {
         try {
             this.writeLock();
             other.readLock();
-            for (int i = 0; i < this.length(); i++) {
-                this.vector[i] += other.get(i);
+            for (int i = 0; i < vector.length; i++) {
+                this.vector[i] += other.vector[i];
             }
         } finally {
-            other.lock.readLock().unlock();
-            this.lock.writeLock().unlock();
+            other.readUnlock();
+            this.writeUnlock();
         }
     }
 
@@ -99,7 +99,7 @@ public class SharedVector {
         // TODO: negate vector
         lock.writeLock().lock();
         try {
-            for (int i = 0; i < this.length(); i++) {
+            for (int i = 0; i < vector.length; i++) {
                 vector[i] = -vector[i];
             }
         } finally {
@@ -116,7 +116,7 @@ public class SharedVector {
             this.readLock();
             other.readLock();
 
-            for (int i = 0; i < this.length(); i++) {
+            for (int i = 0; i < vector.length; i++) {
                 result += this.vector[i] * other.vector[i];
             }
         } finally {
