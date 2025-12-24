@@ -27,19 +27,19 @@ public class LinearAlgebraEngine {
         }
         try {
             executor.shutdown();
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             return null;
         }
         return computationRoot;
-
 
     }
 
     public void loadAndCompute(ComputationNode node) {
         // TODO: load operand matrices
         // TODO: create compute tasks & submit tasks to executor
-        leftMatrix.loadRowMajor(node.getChildren().getFirst().getMatrix());
+        if(!(node.getNodeType() == ComputationNodeType.TRANSPOSE))
+            leftMatrix.loadRowMajor(node.getChildren().getFirst().getMatrix());
+
         if (node.getChildren().size() > 1) {
             rightMatrix.loadRowMajor(node.getChildren().get(1).getMatrix());
         }
@@ -55,6 +55,7 @@ public class LinearAlgebraEngine {
                 tasks = createNegateTasks();
                 break;
             case TRANSPOSE:
+                leftMatrix.loadColumnMajor(node.getChildren().getFirst().getMatrix());
                 tasks = createTransposeTasks();
                 break;
             default:
@@ -108,26 +109,16 @@ public class LinearAlgebraEngine {
     }
 
     public List<Runnable> createTransposeTasks() {
-        // Transpose swaps rows and columns - need to reorganize the entire matrix
+        // TODO: return tasks that transpose rows
         List<Runnable> tasks = new ArrayList<>();
-
-        Runnable transposeTask = () -> {
-            double[][] original = leftMatrix.readRowMajor();
-            int rows = original.length;
-            int cols = rows > 0 ? original[0].length : 0;
-
-            // Create transposed matrix (swap dimensions)
-            double[][] transposed = new double[cols][rows];
-            for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < cols; j++) {
-                    transposed[j][i] = original[i][j];
-                }
-            }
-
-            leftMatrix.loadRowMajor(transposed);
-        };
-
-        tasks.add(transposeTask);
+        for (int i = 0; i < leftMatrix.length(); i++) {
+            final int row = i;
+            Runnable addTask = () -> {
+                SharedVector leftRow = leftMatrix.get(row);
+                leftRow.transpose();
+            };
+            tasks.add(addTask);
+        }
         return tasks;
     }
 
