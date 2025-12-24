@@ -57,7 +57,7 @@ public class TiredThread extends Thread implements Comparable<TiredThread> {
      */
     public void newTask(Runnable task) {
        // TODO
-        if(!this.alive.get() || this.busy.get() || task == null)
+        if(!this.alive.get()  || task == null)
             throw new IllegalStateException("worker is not ready to accept a task");
         handoff.add(task);
 
